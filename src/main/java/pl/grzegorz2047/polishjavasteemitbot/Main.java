@@ -23,6 +23,7 @@ import java.util.*;
 
 public class Main {
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
+    private static String lastAuthorName = "";
 
 
     //https://github.com/marvin-we/steem-java-api-wrapper/tree/0.4.x/sample/src/main/java/my/sample/project
@@ -44,7 +45,7 @@ public class Main {
 
             SteemJConfig steemConfig = createSteemConfig(botName, postingKey);
 
-            checkAndMakeWelcomeComments(steemConfig, watchedTag, botName, content, commentTags.split(","));
+            checkAndMakeWelcomeComments(watchedTag, botName, content, commentTags.split(","), steemConfig.getDefaultAccount());
         } catch (SteemResponseException e) {
             LOGGER.error("An error occured.", e);
             LOGGER.error("The error code is {}", e.getCode());
@@ -58,15 +59,16 @@ public class Main {
     }
 
     private static SteemJConfig createSteemConfig(String botName, String postingKey) {
-        SteemJConfig myConfig = SteemJConfig.getInstance();
-        myConfig.setResponseTimeout(100000);
-        myConfig.setDefaultAccount(new AccountName(botName));
-
+        SteemJConfig steemJConfig = SteemJConfig.getInstance();
+        steemJConfig.setResponseTimeout(100000);
+        AccountName botAccount = new AccountName(botName);
+        steemJConfig.setDefaultAccount(botAccount);
+        steemJConfig.setSteemJWeight((short) 0);
         List<ImmutablePair<PrivateKeyType, String>> privateKeys = new ArrayList<>();
         privateKeys.add(new ImmutablePair<>(PrivateKeyType.POSTING, postingKey));
 
-        myConfig.getPrivateKeyStorage().addAccount(myConfig.getDefaultAccount(), privateKeys);
-        return myConfig;
+        steemJConfig.getPrivateKeyStorage().addAccount(botAccount, privateKeys);
+        return steemJConfig;
     }
 
     private static boolean fileExists(Path pathToFile) {
@@ -95,7 +97,7 @@ public class Main {
         }
     }*/
 
-    private static void checkAndMakeWelcomeComments(SteemJConfig myConfig, String tag, String botName, String message, String[] commentTags) throws SteemCommunicationException, SteemResponseException, InterruptedException, SteemInvalidTransactionException {
+    private static void checkAndMakeWelcomeComments(String tag, String botName, String message, String[] commentTags, AccountName accountWhichCommentsOnPost) throws SteemCommunicationException, SteemResponseException, InterruptedException, SteemInvalidTransactionException {
         // Create a new apiWrapper with your config object.
         SteemJ steemJ = new SteemJ();
 
@@ -137,10 +139,15 @@ public class Main {
                         break;
                     }
                 }
-                if (!alreadyCommented) {
+                if (!alreadyCommented && !lastAuthorName.equals(firstPostAuthor.getName())) {
                     System.out.println("I'm comment on " + firstPostAuthor.getName() + "'s post");
-                    AccountName accountWhichCommentsOnPost = myConfig.getDefaultAccount();
-                    CommentOperation comment = steemJ.createComment(accountWhichCommentsOnPost, firstPostAuthor, permlinkToPost, message, commentTags);
+                    try {
+                        CommentOperation comment = steemJ.createComment(accountWhichCommentsOnPost, firstPostAuthor, permlinkToPost, message, commentTags);
+                        lastAuthorName = firstPostAuthor.getName();
+                    } catch (Exception ex) {
+                        System.out.println("Error while commenting " + ex.getCause().toString());
+
+                    }
                 }
             }
             Thread.sleep(1000);
