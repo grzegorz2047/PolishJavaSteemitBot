@@ -2,18 +2,15 @@ package pl.grzegorz2047.polishjavasteemitbot;
 
 import eu.bittrade.libs.steemj.SteemJ;
 import eu.bittrade.libs.steemj.apis.database.models.state.Discussion;
-import eu.bittrade.libs.steemj.base.models.AccountName;
-import eu.bittrade.libs.steemj.base.models.DiscussionQuery;
-import eu.bittrade.libs.steemj.base.models.ExtendedAccount;
-import eu.bittrade.libs.steemj.base.models.Permlink;
+import eu.bittrade.libs.steemj.apis.follow.model.BlogEntry;
+import eu.bittrade.libs.steemj.base.models.*;
 import eu.bittrade.libs.steemj.base.models.operations.CommentOperation;
 import eu.bittrade.libs.steemj.enums.DiscussionSortType;
 import eu.bittrade.libs.steemj.exceptions.SteemCommunicationException;
 import eu.bittrade.libs.steemj.exceptions.SteemInvalidTransactionException;
 import eu.bittrade.libs.steemj.exceptions.SteemResponseException;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class CommentingBot {
 
@@ -35,25 +32,36 @@ public class CommentingBot {
             Discussion newestDiscussion = disccusions.get(0);
             AccountName firstPostAuthor = newestDiscussion.getAuthor();
             String firstPostAuthorName = firstPostAuthor.getName();
+            //System.out.println("ddd");
             if (isTheSameAuthorAsBefore(firstPostAuthorName)) {
                 Thread.sleep(frequenceCheckInMilliseconds);
                 continue;
             }
-            boolean isFirst = isAuthorsFirstPost(steemJ, firstPostAuthor);
-
+            System.out.println("Checking if " + firstPostAuthorName + " posted first post in this tag");
+            boolean isFirst = checkIfFirstInSpecifiedTag(tag, firstPostAuthor.getName());
+            System.out.println("dawddawda");
             if (isFirst) {
                 debugMsg("We have user with only one post: " + firstPostAuthorName);
                 Permlink permlinkToPost = newestDiscussion.getPermlink();
                 boolean alreadyCommented = didBotAlreadyCommented(botName, steemJ, firstPostAuthor, permlinkToPost);
                 if (!alreadyCommented && !isTheSameAuthorAsBefore(firstPostAuthorName)) {
-                    debugMsg("Icomment on " + firstPostAuthorName + "'s post");
+                    debugMsg("I comment on " + firstPostAuthorName + "'s post");
                     try {
                         CommentOperation comment = steemJ.createComment(accountWhichCommentsOnPost, firstPostAuthor, permlinkToPost, message, commentTags);
                         lastAuthorName = firstPostAuthorName;
+                        debugMsg("Successfuly commented!");
                     } catch (Exception ex) {
                         debugMsg("Error while commenting. Possible reasons? Not enough bandwith? API down? ");
 
                     }
+                }else {
+                    if(alreadyCommented) {
+                        System.out.println("I already commented on this one for " + firstPostAuthorName);
+                    }
+                    if(isTheSameAuthorAsBefore(firstPostAuthorName)) {
+                        System.out.println("Already checked before!");
+                    }
+
                 }
             }
             Thread.sleep(frequenceCheckInMilliseconds);
@@ -118,5 +126,27 @@ public class CommentingBot {
         discussionQuery.setTag(tag);
         discussionQuery.setLimit(1);
         return steemJ.getDiscussionsBy(discussionQuery, DiscussionSortType.GET_DISCUSSIONS_BY_CREATED);
+    }
+
+
+    public boolean checkIfFirstInSpecifiedTag(String tag, String newUser) throws SteemCommunicationException, SteemResponseException {
+        SteemJ steemJ = new SteemJ();
+        DiscussionQuery newQry = new DiscussionQuery();
+        newQry.setLimit(10);
+        AccountName author = new AccountName(newUser);
+        List<BlogEntry> blogEntries = steemJ.getBlogEntries(author, 0, (short) 100);
+        int numberOfPostsInTag = 0;
+        for (BlogEntry blog : blogEntries) {
+            Discussion content = steemJ.getContent(author, blog.getPermlink());
+            Permlink parentPermlink = content.getParentPermlink();
+            if (parentPermlink.getLink().equals(tag)) {
+                System.out.println("W #polish " + content.getTitle());
+                numberOfPostsInTag++;
+            }
+            if (numberOfPostsInTag >= 2) {
+                return false;
+            }
+        }
+        return true;
     }
 }
