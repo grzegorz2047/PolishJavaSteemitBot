@@ -32,4 +32,4 @@ To kill bot, simply use ctrl + c
 
 My steemit account is
 
-https://steemit.com/grzegorz2047
+https://steemit.com/@grzegorz2047
