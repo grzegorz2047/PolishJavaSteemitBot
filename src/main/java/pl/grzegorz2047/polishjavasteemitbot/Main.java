@@ -24,7 +24,6 @@ import java.util.*;
 public class Main {
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 
-
     //https://github.com/marvin-we/steem-java-api-wrapper/tree/0.4.x/sample/src/main/java/my/sample/project
     public static void main(String args[]) {
         try {
@@ -42,13 +41,15 @@ public class Main {
             String postingKey = data.getProperty("postingKey");
             String content = data.getProperty("message");
             String commentTagsString = data.getProperty("commentTags");
+            boolean debugMode = Boolean.parseBoolean(data.getProperty("debug"));
+            Long frequenceCheckInMilliseconds = Long.valueOf(data.getProperty("frequenceCheckInMilliseconds"));
 
             SteemJConfig steemConfig = createSteemConfig(botName, postingKey);
-            CommentingBot commentingBot = new CommentingBot();
+            CommentingBot commentingBot = new CommentingBot(debugMode);
             String[] listOfCommentTags = commentTagsString.split(",");
             AccountName defaultAccount = steemConfig.getDefaultAccount();
-
-            commentingBot.checkAndMakeWelcomeComments(watchedTag, botName, content, listOfCommentTags, defaultAccount);
+            System.out.println("Bot is started!");
+            commentingBot.checkAndMakeWelcomeComments(watchedTag, botName, content, listOfCommentTags, defaultAccount, frequenceCheckInMilliseconds);
         } catch (SteemResponseException e) {
             LOGGER.error("An error occured.", e);
             LOGGER.error("The error code is {}", e.getCode());

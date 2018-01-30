@@ -17,45 +17,60 @@ import java.util.List;
 
 public class CommentingBot {
 
-    private static String lastAuthorName = "";
+    private String lastAuthorName = "";
+    private final boolean debugMode;
+
+    public CommentingBot(boolean debugMode) {
+        this.debugMode = debugMode;
+    }
 
 
-    public void checkAndMakeWelcomeComments(String tag, String botName, String message, String[] commentTags, AccountName accountWhichCommentsOnPost) throws SteemCommunicationException, SteemResponseException, InterruptedException, SteemInvalidTransactionException {
+    public void checkAndMakeWelcomeComments(String tag, String botName, String message, String[] commentTags, AccountName accountWhichCommentsOnPost, Long frequenceCheckInMilliseconds) throws SteemCommunicationException, SteemResponseException, InterruptedException, SteemInvalidTransactionException {
         // Create a new apiWrapper with your config object.
         SteemJ steemJ = new SteemJ();
 
         while (true) {
-            List<Discussion> disccusions = getPossibleNewPost(tag, steemJ);
+            List<Discussion> disccusions = getPossibleNewPost(tag, steemJ, frequenceCheckInMilliseconds);
             if (disccusions == null) continue;
             Discussion newestDiscussion = disccusions.get(0);
             AccountName firstPostAuthor = newestDiscussion.getAuthor();
+            String firstPostAuthorName = firstPostAuthor.getName();
+            if (isTheSameAuthorAsBefore(firstPostAuthorName)) {
+                Thread.sleep(frequenceCheckInMilliseconds);
+                continue;
+            }
             boolean isFirst = isAuthorsFirstPost(steemJ, firstPostAuthor);
 
             if (isFirst) {
-                String firstPostAuthorName = firstPostAuthor.getName();
-                System.out.println("We have user with only one post: " + firstPostAuthorName);
+                debugMsg("We have user with only one post: " + firstPostAuthorName);
                 Permlink permlinkToPost = newestDiscussion.getPermlink();
                 boolean alreadyCommented = didBotAlreadyCommented(botName, steemJ, firstPostAuthor, permlinkToPost);
                 if (!alreadyCommented && !isTheSameAuthorAsBefore(firstPostAuthorName)) {
-                    System.out.println("I'm comment on " + firstPostAuthorName + "'s post");
+                    debugMsg("Icomment on " + firstPostAuthorName + "'s post");
                     try {
                         CommentOperation comment = steemJ.createComment(accountWhichCommentsOnPost, firstPostAuthor, permlinkToPost, message, commentTags);
                         lastAuthorName = firstPostAuthorName;
                     } catch (Exception ex) {
-                        System.out.println("Error while commenting " + ex.getCause().toString());
+                        debugMsg("Error while commenting. Possible reasons? Not enough bandwith? API down? ");
 
                     }
                 }
             }
-            Thread.sleep(1000);
+            Thread.sleep(frequenceCheckInMilliseconds);
         }
     }
 
-    private List<Discussion> getPossibleNewPost(String tag, SteemJ steemJ) throws SteemCommunicationException, SteemResponseException, InterruptedException {
+    private void debugMsg(String x) {
+        if (debugMode) {
+            System.out.println(x);
+        }
+    }
+
+    private List<Discussion> getPossibleNewPost(String tag, SteemJ steemJ, long frequenceCheckInMilliseconds) throws SteemCommunicationException, SteemResponseException, InterruptedException {
         List<Discussion> disccusions = getNewestDiscusions(tag, steemJ);
         if (disccusions.size() == 0) {
-            System.out.println("Nothing found!");
-            Thread.sleep(1000);
+            debugMsg("Nothing found!");
+            Thread.sleep(frequenceCheckInMilliseconds);
             return null;
         }
         return disccusions;
@@ -86,13 +101,13 @@ public class CommentingBot {
         ExtendedAccount extendedAccount = accounts.get(0);
         long commentCount = extendedAccount.getCommentCount();
         long postCount = extendedAccount.getPostCount() - commentCount;
-        System.out.println("Post count is " + postCount);
+        debugMsg("Post count is " + postCount);
         return postCount == 1;
     }
 
     private List<ExtendedAccount> getAuthorProfileData(SteemJ steemJ, AccountName firstPostAuthor) throws SteemCommunicationException, SteemResponseException {
         List<AccountName> list = new ArrayList<>();
-        System.out.println("Found " + firstPostAuthor.getName() + " author");
+        debugMsg("Found " + firstPostAuthor.getName() + " author");
         list.add(firstPostAuthor);
 
         return steemJ.getAccounts(list);
