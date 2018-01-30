@@ -14,15 +14,19 @@ import java.util.*;
 
 public class CommentingBot {
 
+    private final int howDeepToCheckIfFirstPost;
+    private final Long frequenceCheckInMilliseconds;
     private String lastAuthorName = "";
     private final boolean debugMode;
 
-    public CommentingBot(boolean debugMode) {
+    public CommentingBot(boolean debugMode, int howDeepToCheckIfFirstPost, Long frequenceCheckInMilliseconds) {
         this.debugMode = debugMode;
+        this.howDeepToCheckIfFirstPost = howDeepToCheckIfFirstPost;
+        this.frequenceCheckInMilliseconds = frequenceCheckInMilliseconds;
     }
 
 
-    public void checkAndMakeWelcomeComments(String tag, String botName, String message, String[] commentTags, AccountName accountWhichCommentsOnPost, Long frequenceCheckInMilliseconds) throws SteemCommunicationException, SteemResponseException, InterruptedException, SteemInvalidTransactionException {
+    public void checkAndMakeWelcomeComments(String tag, String botName, String message, String[] commentTags, AccountName accountWhichCommentsOnPost) throws SteemCommunicationException, SteemResponseException, InterruptedException, SteemInvalidTransactionException {
         // Create a new apiWrapper with your config object.
         SteemJ steemJ = new SteemJ();
 
@@ -134,7 +138,7 @@ public class CommentingBot {
         DiscussionQuery newQry = new DiscussionQuery();
         newQry.setLimit(10);
         AccountName author = new AccountName(newUser);
-        List<BlogEntry> blogEntries = steemJ.getBlogEntries(author, 0, (short) 100);
+        List<BlogEntry> blogEntries = steemJ.getBlogEntries(author, 0, (short) howDeepToCheckIfFirstPost);
         int numberOfPostsInTag = 0;
         for (BlogEntry blog : blogEntries) {
             Discussion content = steemJ.getContent(author, blog.getPermlink());

@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class CommentingBotTest {
     @Test
     void checkIfFirstInSpecifiedTag() throws SteemResponseException, SteemCommunicationException {
-        CommentingBot commentingBot = new CommentingBot(true);
+        CommentingBot commentingBot = new CommentingBot(true, 100, (long) 1000);
         boolean answer = commentingBot.checkIfFirstInSpecifiedTag("polish", "grzegorz2047");
         assertTrue(!answer);
     }

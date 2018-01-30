@@ -17,6 +17,7 @@ public class PropertiesHandler {
             prop.setProperty("commentTags", "welcome,first,bot,cool");
             prop.setProperty("frequenceCheckInMilliseconds", "1000");
             prop.setProperty("debug", "true");
+            prop.setProperty("HowDeepToCheckIfFirstPost", "100");
 
             // save properties to project root folder
             prop.store(output, null);

@@ -43,13 +43,14 @@ public class Main {
             String commentTagsString = data.getProperty("commentTags");
             boolean debugMode = Boolean.parseBoolean(data.getProperty("debug"));
             Long frequenceCheckInMilliseconds = Long.valueOf(data.getProperty("frequenceCheckInMilliseconds"));
+            int HowDeepToCheckIfFirstPost = Integer.valueOf(data.getProperty("HowDeepToCheckIfFirstPost"));
 
             SteemJConfig steemConfig = createSteemConfig(botName, postingKey);
-            CommentingBot commentingBot = new CommentingBot(debugMode);
+            CommentingBot commentingBot = new CommentingBot(debugMode, HowDeepToCheckIfFirstPost, frequenceCheckInMilliseconds);
             String[] listOfCommentTags = commentTagsString.split(",");
             AccountName defaultAccount = steemConfig.getDefaultAccount();
             System.out.println("Bot is started!");
-            commentingBot.checkAndMakeWelcomeComments(watchedTag, botName, content, listOfCommentTags, defaultAccount, frequenceCheckInMilliseconds);
+            commentingBot.checkAndMakeWelcomeComments(watchedTag, botName, content, listOfCommentTags, defaultAccount);
         } catch (SteemResponseException e) {
             LOGGER.error("An error occured.", e);
             LOGGER.error("The error code is {}", e.getCode());
