@@ -25,48 +25,22 @@ public class CommentingBot {
         SteemJ steemJ = new SteemJ();
 
         while (true) {
-            DiscussionQuery discussionQuery = new DiscussionQuery();
-            discussionQuery.setTag(tag);
-            discussionQuery.setLimit(1);
-            List<Discussion> disccusions = steemJ.getDiscussionsBy(discussionQuery, DiscussionSortType.GET_DISCUSSIONS_BY_CREATED);
-            if (disccusions.size() == 0) {
-                System.out.println("Nothing found!");
-                Thread.sleep(1000);
-                continue;
-            }
-            Discussion discussion = disccusions.get(0);
-            AccountName firstPostAuthor = discussion.getAuthor();
-            List<AccountName> list = new ArrayList<>();
-            System.out.println("Found " + firstPostAuthor.getName() + " author");
-            list.add(firstPostAuthor);
-
-            List<ExtendedAccount> accounts = steemJ.getAccounts(list);
-
-            ExtendedAccount extendedAccount = accounts.get(0);
-            long commentCount = extendedAccount.getCommentCount();
-            long postCount = extendedAccount.getPostCount() - commentCount;
-            System.out.println("Post count is " + postCount);
-            boolean isFirst = postCount == 1;
+            List<Discussion> disccusions = getPossibleNewPost(tag, steemJ);
+            if (disccusions == null) continue;
+            Discussion newestDiscussion = disccusions.get(0);
+            AccountName firstPostAuthor = newestDiscussion.getAuthor();
+            boolean isFirst = isAuthorsFirstPost(steemJ, firstPostAuthor);
 
             if (isFirst) {
-                System.out.println("We have user with only one post: " + firstPostAuthor.getName());
-                Permlink permlinkToPost = discussion.getPermlink();
-                List<Discussion> contentReplies = steemJ.getContentReplies(firstPostAuthor, permlinkToPost);
-                boolean alreadyCommented = false;
-                for (Discussion commentPost : contentReplies) {
-                    AccountName commentPostAuthor = commentPost.getAuthor();
-                    String commentPostAuthorName = commentPostAuthor.getName();
-                    boolean botAnswered = commentPostAuthorName.equals(botName);
-                    if (botAnswered) {
-                        alreadyCommented = true;
-                        break;
-                    }
-                }
-                if (!alreadyCommented && !lastAuthorName.equals(firstPostAuthor.getName())) {
-                    System.out.println("I'm comment on " + firstPostAuthor.getName() + "'s post");
+                String firstPostAuthorName = firstPostAuthor.getName();
+                System.out.println("We have user with only one post: " + firstPostAuthorName);
+                Permlink permlinkToPost = newestDiscussion.getPermlink();
+                boolean alreadyCommented = didBotAlreadyCommented(botName, steemJ, firstPostAuthor, permlinkToPost);
+                if (!alreadyCommented && !isTheSameAuthorAsBefore(firstPostAuthorName)) {
+                    System.out.println("I'm comment on " + firstPostAuthorName + "'s post");
                     try {
                         CommentOperation comment = steemJ.createComment(accountWhichCommentsOnPost, firstPostAuthor, permlinkToPost, message, commentTags);
-                        lastAuthorName = firstPostAuthor.getName();
+                        lastAuthorName = firstPostAuthorName;
                     } catch (Exception ex) {
                         System.out.println("Error while commenting " + ex.getCause().toString());
 
@@ -75,5 +49,59 @@ public class CommentingBot {
             }
             Thread.sleep(1000);
         }
+    }
+
+    private List<Discussion> getPossibleNewPost(String tag, SteemJ steemJ) throws SteemCommunicationException, SteemResponseException, InterruptedException {
+        List<Discussion> disccusions = getNewestDiscusions(tag, steemJ);
+        if (disccusions.size() == 0) {
+            System.out.println("Nothing found!");
+            Thread.sleep(1000);
+            return null;
+        }
+        return disccusions;
+    }
+
+    private boolean isTheSameAuthorAsBefore(String firstPostAuthorName) {
+        return lastAuthorName.equals(firstPostAuthorName);
+    }
+
+    private boolean didBotAlreadyCommented(String botName, SteemJ steemJ, AccountName firstPostAuthor, Permlink permlinkToPost) throws SteemCommunicationException, SteemResponseException {
+        List<Discussion> contentReplies = steemJ.getContentReplies(firstPostAuthor, permlinkToPost);
+        boolean alreadyCommented = false;
+        for (Discussion commentPost : contentReplies) {
+            AccountName commentPostAuthor = commentPost.getAuthor();
+            String commentPostAuthorName = commentPostAuthor.getName();
+            boolean botAnswered = commentPostAuthorName.equals(botName);
+            if (botAnswered) {
+                alreadyCommented = true;
+                break;
+            }
+        }
+        return alreadyCommented;
+    }
+
+    private boolean isAuthorsFirstPost(SteemJ steemJ, AccountName firstPostAuthor) throws SteemCommunicationException, SteemResponseException {
+        List<ExtendedAccount> accounts = getAuthorProfileData(steemJ, firstPostAuthor);
+
+        ExtendedAccount extendedAccount = accounts.get(0);
+        long commentCount = extendedAccount.getCommentCount();
+        long postCount = extendedAccount.getPostCount() - commentCount;
+        System.out.println("Post count is " + postCount);
+        return postCount == 1;
+    }
+
+    private List<ExtendedAccount> getAuthorProfileData(SteemJ steemJ, AccountName firstPostAuthor) throws SteemCommunicationException, SteemResponseException {
+        List<AccountName> list = new ArrayList<>();
+        System.out.println("Found " + firstPostAuthor.getName() + " author");
+        list.add(firstPostAuthor);
+
+        return steemJ.getAccounts(list);
+    }
+
+    private List<Discussion> getNewestDiscusions(String tag, SteemJ steemJ) throws SteemCommunicationException, SteemResponseException {
+        DiscussionQuery discussionQuery = new DiscussionQuery();
+        discussionQuery.setTag(tag);
+        discussionQuery.setLimit(1);
+        return steemJ.getDiscussionsBy(discussionQuery, DiscussionSortType.GET_DISCUSSIONS_BY_CREATED);
     }
 }
