@@ -33,7 +33,7 @@ public class CommentingBot {
         while (true) {
             List<Discussion> disccusions = getPossibleNewPost(tag, steemJ, frequenceCheckInMilliseconds);
             if (disccusions == null) continue;
-            Discussion newestDiscussion = disccusions.get(0);
+            Discussion newestDiscussion = disccusions.get(0);//Tu przydaloby sie jakies cachowanie wynikow
             AccountName firstPostAuthor = newestDiscussion.getAuthor();
             String firstPostAuthorName = firstPostAuthor.getName();
             //System.out.println("ddd");
@@ -43,7 +43,7 @@ public class CommentingBot {
             }
             System.out.println("Checking if " + firstPostAuthorName + " posted first post in this tag");
             boolean isFirst = checkIfFirstInSpecifiedTag(tag, firstPostAuthor.getName());
-            System.out.println("dawddawda");
+            //System.out.println("dawddawda");
             if (isFirst) {
                 debugMsg("We have user with only one post: " + firstPostAuthorName);
                 Permlink permlinkToPost = newestDiscussion.getPermlink();
