@@ -148,7 +148,7 @@ public class CommentingBot {
             Discussion content = steemJ.getContent(author, blog.getPermlink());
             Permlink parentPermlink = content.getParentPermlink();
             if (parentPermlink.getLink().equals(tag)) {
-                System.out.println("W #polish " + content.getTitle());
+                System.out.println("In " + tag + " " + content.getTitle());
                 numberOfPostsInTag++;
             }
             if (numberOfPostsInTag >= 2) {
