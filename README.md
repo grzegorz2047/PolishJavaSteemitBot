@@ -15,14 +15,23 @@ In this file you can specify how often bot looks for new user. Also you can spec
 
 Informations which you can set in bot.properties:
 
+
 commentTags=welcome,first,post,cool
+
 watchedTag=introducemyself
+
 message=Here comment text
+
 botName=botAccountName
+
 postingKey=yourprivatepostingkey
+
 frequenceCheckInMilliseconds=1000
+
 debug=true
+
 HowDeepToCheckIfFirstPost=100
+
 
 To run bot use command in batch file or console: java -jar PolishJavaSteemBot-1.0-SNAPSHOT.jar
 
