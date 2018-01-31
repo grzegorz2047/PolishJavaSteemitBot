@@ -10,6 +10,7 @@ import eu.bittrade.libs.steemj.exceptions.SteemCommunicationException;
 import eu.bittrade.libs.steemj.exceptions.SteemInvalidTransactionException;
 import eu.bittrade.libs.steemj.exceptions.SteemResponseException;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.*;
@@ -37,7 +38,7 @@ public class CommentingBot {
                 doAction(tag, botName, message, commentTags, accountWhichCommentsOnPost, steemJ);
             } catch (Exception ex) {
                 Thread.sleep(frequenceCheckInMilliseconds);
-                message("API DOWN? BANDWITH PROBLEM? " + ex.getMessage(), true);
+                message("Unexpected problem, " + ex.getMessage() + " Trying again", true);
             }
         }
     }
@@ -156,24 +157,33 @@ public class CommentingBot {
         AccountName author = new AccountName(newUser);
         List<BlogEntry> blogEntries = steemJ.getBlogEntries(author, 0, (short) howDeepToCheckIfFirstPost);
         int numberOfPostsInTag = 0;
+        message("===========", false);
         for (BlogEntry blog : blogEntries) {
             Discussion content = steemJ.getContent(author, blog.getPermlink());
             String jsonMetadata = content.getJsonMetadata();
             //message("metadane: " + jsonMetadata);
-            JSONObject jsonArray = new JSONObject(jsonMetadata);
-            JSONArray tags = (JSONArray) jsonArray.get("tags");
-            List<Object> objects = tags.toList();
+            List<Object> objects;
+            try {
+                JSONObject jsonArray = new JSONObject(jsonMetadata);
+                JSONArray tags = (JSONArray) jsonArray.get("tags");
+                objects = tags.toList();
+            } catch (JSONException ex) {
+                message("Cannot parse metadata: " + jsonMetadata, true);
+                objects = new ArrayList<>();
+            }
             boolean contains = objects.contains(tag);
             //message(tags + " zawiera? " + contains);
             //Permlink parentPermlink = content.getParentPermlink();
             if (contains) {
-                message("In " + tag + " " + content.getTitle(), false);
+                message("In " + tag + ": " + content.getTitle(), false);
                 numberOfPostsInTag++;
             }
             if (numberOfPostsInTag >= 2) {
+                message("===========", false);
                 return false;
             }
         }
+        message("===========", false);
         return true;
     }
 }
