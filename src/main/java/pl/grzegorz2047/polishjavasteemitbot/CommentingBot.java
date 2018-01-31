@@ -1,5 +1,6 @@
 package pl.grzegorz2047.polishjavasteemitbot;
 
+import com.google.api.client.json.Json;
 import eu.bittrade.libs.steemj.SteemJ;
 import eu.bittrade.libs.steemj.apis.database.models.state.Discussion;
 import eu.bittrade.libs.steemj.apis.follow.model.BlogEntry;
@@ -9,6 +10,8 @@ import eu.bittrade.libs.steemj.enums.DiscussionSortType;
 import eu.bittrade.libs.steemj.exceptions.SteemCommunicationException;
 import eu.bittrade.libs.steemj.exceptions.SteemInvalidTransactionException;
 import eu.bittrade.libs.steemj.exceptions.SteemResponseException;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.*;
 
@@ -146,8 +149,15 @@ public class CommentingBot {
         int numberOfPostsInTag = 0;
         for (BlogEntry blog : blogEntries) {
             Discussion content = steemJ.getContent(author, blog.getPermlink());
-            Permlink parentPermlink = content.getParentPermlink();
-            if (parentPermlink.getLink().equals(tag)) {
+            String jsonMetadata = content.getJsonMetadata();
+            //System.out.println("metadane: " + jsonMetadata);
+            JSONObject jsonArray = new JSONObject(jsonMetadata);
+            JSONArray tags = (JSONArray) jsonArray.get("tags");
+            List<Object> objects = tags.toList();
+            boolean contains = objects.contains(tag);
+            //System.out.println(tags + " zawiera? " + contains);
+            //Permlink parentPermlink = content.getParentPermlink();
+            if (contains) {
                 System.out.println("In " + tag + " " + content.getTitle());
                 numberOfPostsInTag++;
             }
