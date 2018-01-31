@@ -43,7 +43,7 @@ public class CommentingBot {
         }
     }
 
-    private void doAction(String tag, String botName, String message, String[] commentTags, AccountName accountWhichCommentsOnPost, SteemJ steemJ) throws SteemCommunicationException, SteemResponseException, InterruptedException {
+    private void doAction(String tag, String botName, String message, String[] commentTags, AccountName accountWhichCommentsOnPost, SteemJ steemJ) throws Exception {
         List<Discussion> disccusions = getPossibleNewPost(tag, steemJ, frequenceCheckInMilliseconds);
         if (disccusions == null) return;
         Discussion newestDiscussion = disccusions.get(0);//Tu przydaloby sie jakies cachowanie wynikow
@@ -150,7 +150,7 @@ public class CommentingBot {
     }
 
 
-    public boolean checkIfFirstInSpecifiedTag(String tag, String newUser) throws SteemCommunicationException, SteemResponseException {
+    public boolean checkIfFirstInSpecifiedTag(String tag, String newUser) throws Exception {
         SteemJ steemJ = new SteemJ();
         DiscussionQuery newQry = new DiscussionQuery();
         newQry.setLimit(10);
@@ -170,6 +170,7 @@ public class CommentingBot {
             } catch (JSONException ex) {
                 message("Cannot parse metadata: " + jsonMetadata, true);
                 objects = new ArrayList<>();
+                throw new Exception("Tactical gotta move out");
             }
             boolean contains = objects.contains(tag);
             //message(tags + " zawiera? " + contains);
