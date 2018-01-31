@@ -34,49 +34,58 @@ public class CommentingBot {
         SteemJ steemJ = new SteemJ();
 
         while (true) {
-            List<Discussion> disccusions = getPossibleNewPost(tag, steemJ, frequenceCheckInMilliseconds);
-            if (disccusions == null) continue;
-            Discussion newestDiscussion = disccusions.get(0);//Tu przydaloby sie jakies cachowanie wynikow
-            AccountName firstPostAuthor = newestDiscussion.getAuthor();
-            String firstPostAuthorName = firstPostAuthor.getName();
-            //System.out.println("ddd");
-            if (isTheSameAuthorAsBefore(firstPostAuthorName)) {
+            try {
+                doAction(tag, botName, message, commentTags, accountWhichCommentsOnPost, steemJ);
+            } catch (Exception ex) {
                 Thread.sleep(frequenceCheckInMilliseconds);
-                continue;
+                System.out.println("API DOWN? BANDWITH PROBLEM? " + ex.getMessage());
             }
-            System.out.println("Checking if " + firstPostAuthorName + " posted first post in this tag");
-            boolean isFirst = checkIfFirstInSpecifiedTag(tag, firstPostAuthor.getName());
-            //System.out.println("dawddawda");
-            if (!isFirst) {
-                lastAuthorName = firstPostAuthorName;
-                Thread.sleep(frequenceCheckInMilliseconds);
-                continue;
-            }
-            debugMsg("We have user with only one post: " + firstPostAuthorName);
-            Permlink permlinkToPost = newestDiscussion.getPermlink();
-            boolean alreadyCommented = didBotAlreadyCommented(botName, steemJ, firstPostAuthor, permlinkToPost);
-            if (!alreadyCommented && !isTheSameAuthorAsBefore(firstPostAuthorName)) {
-                debugMsg("I comment on " + firstPostAuthorName + "'s post");
-                try {
-                    CommentOperation comment = steemJ.createComment(accountWhichCommentsOnPost, firstPostAuthor, permlinkToPost, message, commentTags);
-                    lastAuthorName = firstPostAuthorName;
-                    debugMsg("Successfuly commented!");
-                } catch (Exception ex) {
-                    debugMsg("Error while commenting. Possible reasons? Not enough bandwith? API down? ");
-
-                }
-            } else {
-                if (alreadyCommented) {
-                    lastAuthorName = firstPostAuthorName;
-                    System.out.println("I already commented on this one for " + firstPostAuthorName);
-                }
-                if (isTheSameAuthorAsBefore(firstPostAuthorName)) {
-                    System.out.println("Already checked before!");
-                }
-
-            }
-            Thread.sleep(frequenceCheckInMilliseconds);
         }
+    }
+
+    private void doAction(String tag, String botName, String message, String[] commentTags, AccountName accountWhichCommentsOnPost, SteemJ steemJ) throws SteemCommunicationException, SteemResponseException, InterruptedException {
+        List<Discussion> disccusions = getPossibleNewPost(tag, steemJ, frequenceCheckInMilliseconds);
+        if (disccusions == null) return;
+        Discussion newestDiscussion = disccusions.get(0);//Tu przydaloby sie jakies cachowanie wynikow
+        AccountName firstPostAuthor = newestDiscussion.getAuthor();
+        String firstPostAuthorName = firstPostAuthor.getName();
+        //System.out.println("ddd");
+        if (isTheSameAuthorAsBefore(firstPostAuthorName)) {
+            Thread.sleep(frequenceCheckInMilliseconds);
+            return;
+        }
+        System.out.println("Checking if " + firstPostAuthorName + " posted first post in this tag");
+        boolean isFirst = checkIfFirstInSpecifiedTag(tag, firstPostAuthor.getName());
+        //System.out.println("dawddawda");
+        if (!isFirst) {
+            lastAuthorName = firstPostAuthorName;
+            Thread.sleep(frequenceCheckInMilliseconds);
+            return;
+        }
+        debugMsg("We have user with only one post: " + firstPostAuthorName);
+        Permlink permlinkToPost = newestDiscussion.getPermlink();
+        boolean alreadyCommented = didBotAlreadyCommented(botName, steemJ, firstPostAuthor, permlinkToPost);
+        if (!alreadyCommented && !isTheSameAuthorAsBefore(firstPostAuthorName)) {
+            debugMsg("I comment on " + firstPostAuthorName + "'s post");
+            try {
+                CommentOperation comment = steemJ.createComment(accountWhichCommentsOnPost, firstPostAuthor, permlinkToPost, message, commentTags);
+                lastAuthorName = firstPostAuthorName;
+                debugMsg("Successfuly commented!");
+            } catch (Exception ex) {
+                debugMsg("Error while commenting. Possible reasons? Not enough bandwith? API down? ");
+
+            }
+        } else {
+            if (alreadyCommented) {
+                lastAuthorName = firstPostAuthorName;
+                System.out.println("I already commented on this one for " + firstPostAuthorName);
+            }
+            if (isTheSameAuthorAsBefore(firstPostAuthorName)) {
+                System.out.println("Already checked before!");
+            }
+
+        }
+        Thread.sleep(frequenceCheckInMilliseconds);
     }
 
     private void debugMsg(String x) {
