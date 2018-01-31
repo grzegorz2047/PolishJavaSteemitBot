@@ -1,28 +1,30 @@
 package pl.grzegorz2047.polishjavasteemitbot;
 
-import eu.bittrade.libs.steemj.SteemJ;
-import eu.bittrade.libs.steemj.apis.database.models.state.Discussion;
-import eu.bittrade.libs.steemj.base.models.*;
-import eu.bittrade.libs.steemj.base.models.operations.CommentOperation;
+import eu.bittrade.libs.steemj.base.models.AccountName;
 import eu.bittrade.libs.steemj.configuration.SteemJConfig;
-import eu.bittrade.libs.steemj.enums.DiscussionSortType;
 import eu.bittrade.libs.steemj.enums.PrivateKeyType;
 import eu.bittrade.libs.steemj.exceptions.SteemCommunicationException;
 import eu.bittrade.libs.steemj.exceptions.SteemInvalidTransactionException;
 import eu.bittrade.libs.steemj.exceptions.SteemResponseException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.bitcoinj.core.AddressFormatException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
+
+import static java.util.logging.Logger.getLogger;
 
 public class Main {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
+    private static final Logger LOGGER = getLogger("PolishBot");
 
     //https://github.com/marvin-we/steem-java-api-wrapper/tree/0.4.x/sample/src/main/java/my/sample/project
     public static void main(String args[]) {
@@ -35,6 +37,7 @@ public class Main {
                 properties.createFileProperties();
                 System.exit(0);
             }
+            setupFileLogging();
             Properties data = properties.getProperties();
             String watchedTag = data.getProperty("watchedTag");
             String botName = data.getProperty("botName");
@@ -49,17 +52,53 @@ public class Main {
             CommentingBot commentingBot = new CommentingBot(debugMode, HowDeepToCheckIfFirstPost, frequenceCheckInMilliseconds);
             String[] listOfCommentTags = commentTagsString.split(",");
             AccountName defaultAccount = steemConfig.getDefaultAccount();
-            System.out.println("Bot is started!");
+            LOGGER.log(Level.INFO, "Bot is started!");
             commentingBot.checkAndMakeWelcomeComments(watchedTag, botName, content, listOfCommentTags, defaultAccount);
         } catch (SteemResponseException e) {
-            LOGGER.error("An error occured.", e);
-            LOGGER.error("The error code is {}", e.getCode());
+            sendMessage("An error occured.", e, true);
+            sendMessage("The error code is " + e.getCode(), true);
         } catch (SteemCommunicationException e) {
-            LOGGER.error("A communication error occured!", e);
+            sendMessage("A communication error occured!", e, true);
         } catch (InterruptedException | IOException | SteemInvalidTransactionException e) {
             e.printStackTrace();
         } catch (AddressFormatException e) {
-            System.out.println("Klucz prywatny jest nieprawidlowy!");
+            sendMessage("Klucz prywatny jest nieprawidlowy!", true);
+        }
+    }
+
+    public static void sendMessage(String msg, boolean isError) {
+        if (isError) {
+            LOGGER.log(Level.SEVERE, msg);
+        } else {
+            LOGGER.log(Level.INFO, msg);
+
+        }
+    }
+
+    public static void sendMessage(String msg, Throwable thrown, boolean isError) {
+        if (isError) {
+            LOGGER.log(Level.SEVERE, msg, thrown);
+        } else {
+            LOGGER.log(Level.INFO, msg, thrown);
+        }
+    }
+
+    private static void setupFileLogging() {
+        FileHandler fh;
+
+        try {
+
+            // This block configure the logger with handler and formatter
+            fh = new FileHandler("bot.log");
+            LOGGER.addHandler(fh);
+            SimpleFormatter formatter = new SimpleFormatter();
+            fh.setFormatter(formatter);
+
+            // the following statement is used to log any messages
+        } catch (SecurityException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

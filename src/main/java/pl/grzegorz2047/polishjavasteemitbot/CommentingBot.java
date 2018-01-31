@@ -38,7 +38,7 @@ public class CommentingBot {
                 doAction(tag, botName, message, commentTags, accountWhichCommentsOnPost, steemJ);
             } catch (Exception ex) {
                 Thread.sleep(frequenceCheckInMilliseconds);
-                System.out.println("API DOWN? BANDWITH PROBLEM? " + ex.getMessage());
+                Main.sendMessage("API DOWN? BANDWITH PROBLEM? " + ex.getMessage(), true);
             }
         }
     }
@@ -49,14 +49,14 @@ public class CommentingBot {
         Discussion newestDiscussion = disccusions.get(0);//Tu przydaloby sie jakies cachowanie wynikow
         AccountName firstPostAuthor = newestDiscussion.getAuthor();
         String firstPostAuthorName = firstPostAuthor.getName();
-        //System.out.println("ddd");
+        //Main.sendMessage("ddd");
         if (isTheSameAuthorAsBefore(firstPostAuthorName)) {
             Thread.sleep(frequenceCheckInMilliseconds);
             return;
         }
-        System.out.println("Checking if " + firstPostAuthorName + " posted first post in this tag");
+        Main.sendMessage("Checking if " + firstPostAuthorName + " posted first post in this tag", false);
         boolean isFirst = checkIfFirstInSpecifiedTag(tag, firstPostAuthor.getName());
-        //System.out.println("dawddawda");
+        //Main.sendMessage("dawddawda");
         if (!isFirst) {
             lastAuthorName = firstPostAuthorName;
             Thread.sleep(frequenceCheckInMilliseconds);
@@ -74,14 +74,15 @@ public class CommentingBot {
             } catch (Exception ex) {
                 debugMsg("Error while commenting. Possible reasons? Not enough bandwith? API down? ");
 
+                Thread.sleep(5000);//delay 5 seconds
             }
         } else {
             if (alreadyCommented) {
                 lastAuthorName = firstPostAuthorName;
-                System.out.println("I already commented on this one for " + firstPostAuthorName);
+                Main.sendMessage("I already commented on this one for " + firstPostAuthorName, false);
             }
             if (isTheSameAuthorAsBefore(firstPostAuthorName)) {
-                System.out.println("Already checked before!");
+                Main.sendMessage("Already checked before!", false);
             }
 
         }
@@ -90,7 +91,7 @@ public class CommentingBot {
 
     private void debugMsg(String x) {
         if (debugMode) {
-            System.out.println(x);
+            Main.sendMessage(x, false);
         }
     }
 
@@ -159,15 +160,15 @@ public class CommentingBot {
         for (BlogEntry blog : blogEntries) {
             Discussion content = steemJ.getContent(author, blog.getPermlink());
             String jsonMetadata = content.getJsonMetadata();
-            //System.out.println("metadane: " + jsonMetadata);
+            //Main.sendMessage("metadane: " + jsonMetadata);
             JSONObject jsonArray = new JSONObject(jsonMetadata);
             JSONArray tags = (JSONArray) jsonArray.get("tags");
             List<Object> objects = tags.toList();
             boolean contains = objects.contains(tag);
-            //System.out.println(tags + " zawiera? " + contains);
+            //Main.sendMessage(tags + " zawiera? " + contains);
             //Permlink parentPermlink = content.getParentPermlink();
             if (contains) {
-                System.out.println("In " + tag + " " + content.getTitle());
+                Main.sendMessage("In " + tag + " " + content.getTitle(), false);
                 numberOfPostsInTag++;
             }
             if (numberOfPostsInTag >= 2) {
