@@ -1,6 +1,7 @@
 package pl.grzegorz2047.polishjavasteemitbot;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.util.Properties;
 
 public class PropertiesHandler {
@@ -38,11 +39,10 @@ public class PropertiesHandler {
 
     Properties getProperties() throws IOException {
         Properties prop = new Properties();
-        InputStream input = null;
+        FileInputStream input = null;
         try {
-            input = new FileInputStream("bot.properties");
-
-            prop.load(input);
+            input = new FileInputStream(new File("bot.properties"));
+            prop.load(new InputStreamReader(input, Charset.forName("UTF-8")));
             return prop;
         } catch (IOException ex) {
             ex.printStackTrace();
