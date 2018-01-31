@@ -1,6 +1,5 @@
 package pl.grzegorz2047.polishjavasteemitbot;
 
-import com.google.api.client.json.Json;
 import eu.bittrade.libs.steemj.SteemJ;
 import eu.bittrade.libs.steemj.apis.database.models.state.Discussion;
 import eu.bittrade.libs.steemj.apis.follow.model.BlogEntry;
@@ -38,7 +37,7 @@ public class CommentingBot {
                 doAction(tag, botName, message, commentTags, accountWhichCommentsOnPost, steemJ);
             } catch (Exception ex) {
                 Thread.sleep(frequenceCheckInMilliseconds);
-                Main.sendMessage("API DOWN? BANDWITH PROBLEM? " + ex.getMessage(), true);
+                message("API DOWN? BANDWITH PROBLEM? " + ex.getMessage(), true);
             }
         }
     }
@@ -49,56 +48,56 @@ public class CommentingBot {
         Discussion newestDiscussion = disccusions.get(0);//Tu przydaloby sie jakies cachowanie wynikow
         AccountName firstPostAuthor = newestDiscussion.getAuthor();
         String firstPostAuthorName = firstPostAuthor.getName();
-        //Main.sendMessage("ddd");
+        //message("ddd");
         if (isTheSameAuthorAsBefore(firstPostAuthorName)) {
             Thread.sleep(frequenceCheckInMilliseconds);
             return;
         }
-        Main.sendMessage("Checking if " + firstPostAuthorName + " posted first post in this tag", false);
+        message("Checking if " + firstPostAuthorName + " posted first post in this tag", false);
         boolean isFirst = checkIfFirstInSpecifiedTag(tag, firstPostAuthor.getName());
-        //Main.sendMessage("dawddawda");
+        //message("dawddawda");
         if (!isFirst) {
             lastAuthorName = firstPostAuthorName;
             Thread.sleep(frequenceCheckInMilliseconds);
             return;
         }
-        debugMsg("We have user with only one post: " + firstPostAuthorName);
+        message("We have user with only one post: " + firstPostAuthorName, false);
         Permlink permlinkToPost = newestDiscussion.getPermlink();
         boolean alreadyCommented = didBotAlreadyCommented(botName, steemJ, firstPostAuthor, permlinkToPost);
         if (!alreadyCommented && !isTheSameAuthorAsBefore(firstPostAuthorName)) {
-            debugMsg("I comment on " + firstPostAuthorName + "'s post");
+            message("I comment on " + firstPostAuthorName + "'s post", false);
             try {
                 CommentOperation comment = steemJ.createComment(accountWhichCommentsOnPost, firstPostAuthor, permlinkToPost, message, commentTags);
                 lastAuthorName = firstPostAuthorName;
-                debugMsg("Successfuly commented!");
+                message("Successfuly commented!", false);
             } catch (Exception ex) {
-                debugMsg("Error while commenting. Possible reasons? Not enough bandwith? API down? ");
+                message("Error while commenting. Possible reasons? Not enough bandwith? API down? ", true);
 
                 Thread.sleep(5000);//delay 5 seconds
             }
         } else {
             if (alreadyCommented) {
                 lastAuthorName = firstPostAuthorName;
-                Main.sendMessage("I already commented on this one for " + firstPostAuthorName, false);
+                message("I already commented on this one for " + firstPostAuthorName, false);
             }
             if (isTheSameAuthorAsBefore(firstPostAuthorName)) {
-                Main.sendMessage("Already checked before!", false);
+                message("Already checked before!", false);
             }
 
         }
         Thread.sleep(frequenceCheckInMilliseconds);
     }
 
-    private void debugMsg(String x) {
+    private void message(String x, boolean isError) {
         if (debugMode) {
-            Main.sendMessage(x, false);
+            Main.sendMessage(x, isError);
         }
     }
 
     private List<Discussion> getPossibleNewPost(String tag, SteemJ steemJ, long frequenceCheckInMilliseconds) throws SteemCommunicationException, SteemResponseException, InterruptedException {
         List<Discussion> disccusions = getNewestDiscusions(tag, steemJ);
         if (disccusions.size() == 0) {
-            debugMsg("Nothing found!");
+            message("Nothing found!", true);
             Thread.sleep(frequenceCheckInMilliseconds);
             return null;
         }
@@ -130,13 +129,13 @@ public class CommentingBot {
         ExtendedAccount extendedAccount = accounts.get(0);
         long commentCount = extendedAccount.getCommentCount();
         long postCount = extendedAccount.getPostCount() - commentCount;
-        debugMsg("Post count is " + postCount);
+        message("Post count is " + postCount, false);
         return postCount == 1;
     }
 
     private List<ExtendedAccount> getAuthorProfileData(SteemJ steemJ, AccountName firstPostAuthor) throws SteemCommunicationException, SteemResponseException {
         List<AccountName> list = new ArrayList<>();
-        debugMsg("Found " + firstPostAuthor.getName() + " author");
+        message("Found " + firstPostAuthor.getName() + " author", false);
         list.add(firstPostAuthor);
 
         return steemJ.getAccounts(list);
@@ -160,15 +159,15 @@ public class CommentingBot {
         for (BlogEntry blog : blogEntries) {
             Discussion content = steemJ.getContent(author, blog.getPermlink());
             String jsonMetadata = content.getJsonMetadata();
-            //Main.sendMessage("metadane: " + jsonMetadata);
+            //message("metadane: " + jsonMetadata);
             JSONObject jsonArray = new JSONObject(jsonMetadata);
             JSONArray tags = (JSONArray) jsonArray.get("tags");
             List<Object> objects = tags.toList();
             boolean contains = objects.contains(tag);
-            //Main.sendMessage(tags + " zawiera? " + contains);
+            //message(tags + " zawiera? " + contains);
             //Permlink parentPermlink = content.getParentPermlink();
             if (contains) {
-                Main.sendMessage("In " + tag + " " + content.getTitle(), false);
+                message("In " + tag + " " + content.getTitle(), false);
                 numberOfPostsInTag++;
             }
             if (numberOfPostsInTag >= 2) {

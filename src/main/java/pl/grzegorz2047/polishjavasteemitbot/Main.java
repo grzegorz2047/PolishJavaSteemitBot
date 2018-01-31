@@ -14,12 +14,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
-import java.util.logging.FileHandler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
+import java.util.logging.*;
 
 import static java.util.logging.Logger.getLogger;
 
@@ -87,14 +85,10 @@ public class Main {
         FileHandler fh;
 
         try {
-
             // This block configure the logger with handler and formatter
             fh = new FileHandler("bot.log");
             LOGGER.addHandler(fh);
-            SimpleFormatter formatter = new SimpleFormatter();
-            fh.setFormatter(formatter);
-
-            // the following statement is used to log any messages
+            fh.setFormatter(new SimpleFormatter());
         } catch (SecurityException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -118,28 +112,5 @@ public class Main {
     private static boolean fileExists(Path pathToFile) {
         return Files.exists(pathToFile);
     }
-
-
-/*
-    private static void fun() throws SteemCommunicationException, SteemResponseException {
-        SteemJ steemJ = new SteemJ();
-
-        DiscussionQuery newQry = new DiscussionQuery();
-        newQry.setTag("polish");
-        newQry.setLimit(10);
-        newQry.setStartAuthor( new AccountName("grzegorz2047"));
-        newQry.setSelectAuthors(Collections.singletonList(newQry.getStartAuthor()));
-        List<ExtendedAccount> grzex = steemJ.getAccounts(Collections.singletonList(newQry.getStartAuthor()));
-        ExtendedAccount extendedAccountgr = grzex.get(0);
-
-        List<Discussion> discussionsInPolishByGrzegorz2047 = steemJ.getDiscussionsBy(newQry, DiscussionSortType.GET_DISCUSSIONS_BY_CREATED);
-
-//            discussionsInPolishByGrzegorz2047.size();
-        System.out.println("Number of discussions in polish " + discussionsInPolishByGrzegorz2047.size());
-        for (Discussion d : discussionsInPolishByGrzegorz2047) {
-            System.out.println("Dyskusja " + d.getTitle());
-        }
-    }*/
-
 
 }
