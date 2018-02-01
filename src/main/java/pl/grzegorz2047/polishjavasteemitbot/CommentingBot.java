@@ -54,7 +54,7 @@ public class CommentingBot {
             Thread.sleep(frequenceCheckInMilliseconds);
             return;
         }
-        message("Checking if " + firstPostAuthorName + " posted first post in this tag", false);
+        message("Checking if === " + firstPostAuthorName + " === posted his first post in " + tag + " tag", false);
         boolean isFirst = checkIfFirstInSpecifiedTag(tag, firstPostAuthor.getName());
         //message("dawddawda");
         if (!isFirst) {
@@ -62,13 +62,14 @@ public class CommentingBot {
             Thread.sleep(frequenceCheckInMilliseconds);
             return;
         }
-        message("We have user with only one post: " + firstPostAuthorName, false);
+        message(firstPostAuthorName + " has only one post in " + tag, false);
         Permlink permlinkToPost = newestDiscussion.getPermlink();
         boolean alreadyCommented = didBotAlreadyCommented(botName, steemJ, firstPostAuthor, permlinkToPost);
         if (!alreadyCommented && !isTheSameAuthorAsBefore(firstPostAuthorName)) {
             message("I comment on " + firstPostAuthorName + "'s post", false);
             try {
-                CommentOperation comment = steemJ.createComment(accountWhichCommentsOnPost, firstPostAuthor, permlinkToPost, message, commentTags);
+                message = message.replaceAll("<author>", firstPostAuthorName);
+                steemJ.createComment(accountWhichCommentsOnPost, firstPostAuthor, permlinkToPost, message, commentTags);
                 lastAuthorName = firstPostAuthorName;
                 message("Successfuly commented!", false);
             } catch (Exception ex) {
@@ -160,6 +161,9 @@ public class CommentingBot {
         message("===========", false);
         for (BlogEntry blog : blogEntries) {
             Discussion content = steemJ.getContent(author, blog.getPermlink());
+            if (content.getRebloggedBy().contains(author)) {
+                continue;
+            }
             String jsonMetadata = content.getJsonMetadata();
             //message("metadane: " + jsonMetadata);
             List<Object> objects;
@@ -168,8 +172,8 @@ public class CommentingBot {
                 JSONArray tags = (JSONArray) jsonArray.get("tags");
                 objects = tags.toList();
             } catch (JSONException ex) {
-                message("Cannot parse metadata: " + jsonMetadata, true);
-                objects = new ArrayList<>();
+                message("Cannot parse following metadata: " + jsonMetadata, true);
+                message("Problematic disccustion: " + content.toString(), true);
                 throw new Exception("Tactical gotta move out");
             }
             boolean contains = objects.contains(tag);
