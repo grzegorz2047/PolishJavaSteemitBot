@@ -54,7 +54,7 @@ public class CommentingBot {
             Thread.sleep(frequenceCheckInMilliseconds);
             return;
         }
-        message("Checking if === " + firstPostAuthorName + " === posted his first post in " + tag + " tag", false);
+        message("Checking === " + firstPostAuthorName + " === ", false);
         boolean isFirst = checkIfFirstInSpecifiedTag(tag, firstPostAuthor.getName());
         //message("dawddawda");
         if (!isFirst) {
