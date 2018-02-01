@@ -173,7 +173,9 @@ public class CommentingBot {
                 objects = tags.toList();
             } catch (JSONException ex) {
                 message("Cannot parse following metadata: " + jsonMetadata, true);
-                message("Problematic disccustion: " + content.toString(), true);
+                message("info: " + content.getTitle(), true);
+                message("info: " + content.getAuthor(), true);
+                //message("Problematic disccustion: " + content.toString(), true);
                 throw new Exception("Tactical gotta move out");
             }
             boolean contains = objects.contains(tag);
