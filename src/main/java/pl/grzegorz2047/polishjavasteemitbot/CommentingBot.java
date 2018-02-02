@@ -70,6 +70,7 @@ public class CommentingBot {
             try {
                 message = message.replaceAll("<author>", firstPostAuthorName);
                 steemJ.createComment(accountWhichCommentsOnPost, firstPostAuthor, permlinkToPost, message, commentTags);
+                steemJ.vote(accountWhichCommentsOnPost, permlinkToPost, (short) 1);
                 lastAuthorName = firstPostAuthorName;
                 message("Successfuly commented!", false);
             } catch (Exception ex) {
