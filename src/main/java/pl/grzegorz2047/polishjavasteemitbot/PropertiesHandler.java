@@ -17,8 +17,11 @@ public class PropertiesHandler {
             prop.setProperty("message", "Welcome on this tag!");
             prop.setProperty("commentTags", "welcome,first,bot,cool");
             prop.setProperty("frequenceCheckInMilliseconds", "1000");
+            prop.setProperty("votingEnabled", "true");
+            prop.setProperty("votingPower", "100");
+            prop.setProperty("howDeepToCheckIfFirstPost", "100");
+            prop.setProperty("reblogEnabled", "true");
             prop.setProperty("debug", "true");
-            prop.setProperty("HowDeepToCheckIfFirstPost", "100");
 
             // save properties to project root folder
             prop.store(output, null);

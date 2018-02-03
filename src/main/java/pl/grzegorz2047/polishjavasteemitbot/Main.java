@@ -36,22 +36,7 @@ public class Main {
                 System.exit(0);
             }
             setupFileLogging();
-            Properties data = properties.getProperties();
-            String watchedTag = data.getProperty("watchedTag");
-            String botName = data.getProperty("botName");
-            String postingKey = data.getProperty("postingKey");
-            String content = data.getProperty("message");
-            String commentTagsString = data.getProperty("commentTags");
-            boolean debugMode = Boolean.parseBoolean(data.getProperty("debug"));
-            Long frequenceCheckInMilliseconds = Long.valueOf(data.getProperty("frequenceCheckInMilliseconds"));
-            int HowDeepToCheckIfFirstPost = Integer.valueOf(data.getProperty("HowDeepToCheckIfFirstPost"));
-
-            SteemJConfig steemConfig = createSteemConfig(botName, postingKey);
-            CommentingBot commentingBot = new CommentingBot(debugMode, HowDeepToCheckIfFirstPost, frequenceCheckInMilliseconds);
-            String[] listOfCommentTags = commentTagsString.split(",");
-            AccountName defaultAccount = steemConfig.getDefaultAccount();
-            LOGGER.log(Level.INFO, "Bot is started!");
-            commentingBot.checkAndMakeWelcomeComments(watchedTag, botName, content, listOfCommentTags, defaultAccount);
+            runCommentingBot(properties);
         } catch (SteemResponseException e) {
             sendMessage("An error occured.", e, true);
             sendMessage("The error code is " + e.getCode(), true);
@@ -62,6 +47,28 @@ public class Main {
         } catch (AddressFormatException e) {
             sendMessage("Klucz prywatny jest nieprawidlowy!", true);
         }
+    }
+
+    private static void runCommentingBot(PropertiesHandler properties) throws IOException, SteemCommunicationException, SteemResponseException, InterruptedException, SteemInvalidTransactionException {
+        Properties data = properties.getProperties();
+        String watchedTag = data.getProperty("watchedTag");
+        String botName = data.getProperty("botName");
+        String postingKey = data.getProperty("postingKey");
+        String content = data.getProperty("message");
+        String commentTagsString = data.getProperty("commentTags");
+        boolean debugMode = Boolean.parseBoolean(data.getProperty("debug"));
+        boolean votingEnabled = Boolean.parseBoolean(data.getProperty("votingEnabled"));
+        int votingPower = Integer.valueOf(data.getProperty("votingPower"));
+        Long frequenceCheckInMilliseconds = Long.valueOf(data.getProperty("frequenceCheckInMilliseconds"));
+        int howDeepToCheckIfFirstPost = Integer.valueOf(data.getProperty("howDeepToCheckIfFirstPost"));
+        boolean reblogEnabled = Boolean.parseBoolean(data.getProperty("reblogEnabled"));
+
+        SteemJConfig steemConfig = createSteemConfig(botName, postingKey);
+        CommentingBot commentingBot = new CommentingBot(debugMode, howDeepToCheckIfFirstPost, frequenceCheckInMilliseconds, votingEnabled, votingPower, reblogEnabled);
+        String[] listOfCommentTags = commentTagsString.split(",");
+        AccountName defaultAccount = steemConfig.getDefaultAccount();
+        LOGGER.log(Level.INFO, "Bot is started!");
+        commentingBot.checkAndMakeWelcomeComments(watchedTag, botName, content, listOfCommentTags, defaultAccount);
     }
 
     public static void sendMessage(String msg, boolean isError) {
@@ -85,6 +92,9 @@ public class Main {
         FileHandler fh;
 
         try {
+            for (Handler handler : LOGGER.getHandlers()) {
+                LOGGER.removeHandler(handler);
+            }
             // This block configure the logger with handler and formatter
             fh = new FileHandler("bot.log");
             LOGGER.addHandler(fh);

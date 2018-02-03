@@ -4,7 +4,6 @@ import eu.bittrade.libs.steemj.SteemJ;
 import eu.bittrade.libs.steemj.apis.database.models.state.Discussion;
 import eu.bittrade.libs.steemj.apis.follow.model.BlogEntry;
 import eu.bittrade.libs.steemj.base.models.*;
-import eu.bittrade.libs.steemj.base.models.operations.CommentOperation;
 import eu.bittrade.libs.steemj.enums.DiscussionSortType;
 import eu.bittrade.libs.steemj.exceptions.SteemCommunicationException;
 import eu.bittrade.libs.steemj.exceptions.SteemInvalidTransactionException;
@@ -19,13 +18,19 @@ public class CommentingBot {
 
     private final int howDeepToCheckIfFirstPost;
     private final Long frequenceCheckInMilliseconds;
+    private final int votingPercentage;
     private String lastAuthorName = "";
     private final boolean debugMode;
+    private boolean votingEnabled;
+    private boolean reblogEnabled;
 
-    public CommentingBot(boolean debugMode, int howDeepToCheckIfFirstPost, Long frequenceCheckInMilliseconds) {
+    public CommentingBot(boolean debugMode, int howDeepToCheckIfFirstPost, Long frequenceCheckInMilliseconds, boolean votingEnabled, int votingPercentage, boolean reblogEnabled) {
         this.debugMode = debugMode;
         this.howDeepToCheckIfFirstPost = howDeepToCheckIfFirstPost;
         this.frequenceCheckInMilliseconds = frequenceCheckInMilliseconds;
+        this.votingEnabled = votingEnabled;
+        this.votingPercentage = votingPercentage;
+        this.reblogEnabled = reblogEnabled;
     }
 
 
@@ -70,7 +75,26 @@ public class CommentingBot {
             try {
                 message = message.replaceAll("<author>", firstPostAuthorName);
                 steemJ.createComment(accountWhichCommentsOnPost, firstPostAuthor, permlinkToPost, message, commentTags);
-                steemJ.vote(accountWhichCommentsOnPost, permlinkToPost, (short) 1);
+                if (votingEnabled) {
+                    try {
+
+                        steemJ.vote(firstPostAuthor, permlinkToPost, (short) votingPercentage);
+
+                    } catch (Exception ex) {
+                        message("Error while voting data.", true);
+                        message("author: " + accountWhichCommentsOnPost.getName() + "", true);
+                        message("url: " + permlinkToPost.getLink() + "", true);
+                        message("votingPower: " + votingPercentage + "", true);
+                    }
+                    if (reblogEnabled) {
+                        try {
+                            steemJ.reblog(firstPostAuthor, permlinkToPost);
+                        } catch (Exception ex) {
+                            message("Error while reblogging.", true);
+                        }
+                    }
+
+                }
                 lastAuthorName = firstPostAuthorName;
                 message("Successfuly commented!", false);
             } catch (Exception ex) {
@@ -93,6 +117,7 @@ public class CommentingBot {
 
     private void message(String x, boolean isError) {
         if (debugMode) {
+            System.out.println(x);
             Main.sendMessage(x, isError);
         }
     }
@@ -126,24 +151,6 @@ public class CommentingBot {
         return alreadyCommented;
     }
 
-    private boolean isAuthorsFirstPost(SteemJ steemJ, AccountName firstPostAuthor) throws SteemCommunicationException, SteemResponseException {
-        List<ExtendedAccount> accounts = getAuthorProfileData(steemJ, firstPostAuthor);
-
-        ExtendedAccount extendedAccount = accounts.get(0);
-        long commentCount = extendedAccount.getCommentCount();
-        long postCount = extendedAccount.getPostCount() - commentCount;
-        message("Post count is " + postCount, false);
-        return postCount == 1;
-    }
-
-    private List<ExtendedAccount> getAuthorProfileData(SteemJ steemJ, AccountName firstPostAuthor) throws SteemCommunicationException, SteemResponseException {
-        List<AccountName> list = new ArrayList<>();
-        message("Found " + firstPostAuthor.getName() + " author", false);
-        list.add(firstPostAuthor);
-
-        return steemJ.getAccounts(list);
-    }
-
     private List<Discussion> getNewestDiscusions(String tag, SteemJ steemJ) throws SteemCommunicationException, SteemResponseException {
         DiscussionQuery discussionQuery = new DiscussionQuery();
         discussionQuery.setTag(tag);
@@ -173,11 +180,9 @@ public class CommentingBot {
                 JSONArray tags = (JSONArray) jsonArray.get("tags");
                 objects = tags.toList();
             } catch (JSONException ex) {
-                message("Cannot parse following metadata: " + jsonMetadata, true);
-                message("info: " + content.getTitle(), true);
-                message("info: " + content.getAuthor(), true);
-                //message("Problematic disccustion: " + content.toString(), true);
-                throw new Exception("Tactical gotta move out");
+                message("Cant check post. skipping one: ", true);
+                continue;
+
             }
             boolean contains = objects.contains(tag);
             //message(tags + " zawiera? " + contains);
