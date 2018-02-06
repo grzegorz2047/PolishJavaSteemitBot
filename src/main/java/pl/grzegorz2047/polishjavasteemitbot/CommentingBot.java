@@ -19,18 +19,20 @@ public class CommentingBot {
     private final int howDeepToCheckIfFirstPost;
     private final Long frequenceCheckInMilliseconds;
     private final int votingPercentage;
+    private final int votingPowerLimit;
     private String lastAuthorName = "";
     private final boolean debugMode;
     private boolean votingEnabled;
     private boolean reblogEnabled;
 
-    public CommentingBot(boolean debugMode, int howDeepToCheckIfFirstPost, Long frequenceCheckInMilliseconds, boolean votingEnabled, int votingPercentage, boolean reblogEnabled) {
+    public CommentingBot(boolean debugMode, int howDeepToCheckIfFirstPost, Long frequenceCheckInMilliseconds, boolean votingEnabled, int votingPercentage, boolean reblogEnabled, int votingPowerLimit) {
         this.debugMode = debugMode;
         this.howDeepToCheckIfFirstPost = howDeepToCheckIfFirstPost;
         this.frequenceCheckInMilliseconds = frequenceCheckInMilliseconds;
         this.votingEnabled = votingEnabled;
         this.votingPercentage = votingPercentage;
         this.reblogEnabled = reblogEnabled;
+        this.votingPowerLimit = votingPowerLimit;
     }
 
 
@@ -76,10 +78,20 @@ public class CommentingBot {
                 message = message.replaceAll("<author>", firstPostAuthorName);
                 steemJ.createComment(accountWhichCommentsOnPost, firstPostAuthor, permlinkToPost, message, commentTags);
                 if (votingEnabled) {
+
                     try {
-
-                        steemJ.vote(firstPostAuthor, permlinkToPost, (short) votingPercentage);
-
+                        List<ExtendedAccount> extendedBotInfoProfile = steemJ.getAccounts(Collections.singletonList(accountWhichCommentsOnPost));
+                        ExtendedAccount extendedAccount = extendedBotInfoProfile.get(0);
+                        if (extendedAccount.getVotingPower() <= 0) {
+                            message("To low voting power to vote!", true);
+                        }
+                        float votingPower = extendedAccount.getVotingPower() / 100;
+                        message("Current voting power is " + votingPower + " for " + extendedAccount.getName(), false);
+                        if (votingPower > votingPowerLimit) {
+                            steemJ.vote(firstPostAuthor, permlinkToPost, (short) votingPercentage);
+                        } else {
+                            message("Cannot vote! voting power is " + votingPower, true);
+                        }
                     } catch (Exception ex) {
                         message("Error while voting data.", true);
                         message("author: " + accountWhichCommentsOnPost.getName() + "", true);
@@ -88,6 +100,7 @@ public class CommentingBot {
                     }
                     if (reblogEnabled) {
                         try {
+
                             steemJ.reblog(firstPostAuthor, permlinkToPost);
                         } catch (Exception ex) {
                             message("Error while reblogging.", true);
@@ -199,4 +212,5 @@ public class CommentingBot {
         message("===========", false);
         return true;
     }
+
 }

@@ -8,6 +8,7 @@ import eu.bittrade.libs.steemj.exceptions.SteemInvalidTransactionException;
 import eu.bittrade.libs.steemj.exceptions.SteemResponseException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.bitcoinj.core.AddressFormatException;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -23,6 +24,7 @@ import static java.util.logging.Logger.getLogger;
 
 public class Main {
     private static final Logger LOGGER = getLogger("PolishBot");
+    private static final org.slf4j.Logger slogger = LoggerFactory.getLogger("PolishBot");
 
     //https://github.com/marvin-we/steem-java-api-wrapper/tree/0.4.x/sample/src/main/java/my/sample/project
     public static void main(String args[]) {
@@ -62,12 +64,14 @@ public class Main {
         Long frequenceCheckInMilliseconds = Long.valueOf(data.getProperty("frequenceCheckInMilliseconds"));
         int howDeepToCheckIfFirstPost = Integer.valueOf(data.getProperty("howDeepToCheckIfFirstPost"));
         boolean reblogEnabled = Boolean.parseBoolean(data.getProperty("reblogEnabled"));
+        int votingPowerLimit = Integer.parseInt(data.getProperty("votingPowerLimit"));
 
         SteemJConfig steemConfig = createSteemConfig(botName, postingKey);
-        CommentingBot commentingBot = new CommentingBot(debugMode, howDeepToCheckIfFirstPost, frequenceCheckInMilliseconds, votingEnabled, votingPower, reblogEnabled);
+        CommentingBot commentingBot = new CommentingBot(debugMode, howDeepToCheckIfFirstPost, frequenceCheckInMilliseconds, votingEnabled, votingPower, reblogEnabled, votingPowerLimit);
         String[] listOfCommentTags = commentTagsString.split(",");
         AccountName defaultAccount = steemConfig.getDefaultAccount();
         LOGGER.log(Level.INFO, "Bot is started!");
+
         commentingBot.checkAndMakeWelcomeComments(watchedTag, botName, content, listOfCommentTags, defaultAccount);
     }
 
@@ -76,7 +80,6 @@ public class Main {
             LOGGER.log(Level.SEVERE, msg);
         } else {
             LOGGER.log(Level.INFO, msg);
-
         }
     }
 
@@ -111,6 +114,7 @@ public class Main {
         steemJConfig.setResponseTimeout(100000);
         AccountName botAccount = new AccountName(botName);
         steemJConfig.setDefaultAccount(botAccount);
+
         steemJConfig.setSteemJWeight((short) 0);//https://github.com/marvin-we/steem-java-api-wrapper/blob/126c907c4d136d38d4e805153aae1457f0a8f5e6/core/src/main/java/eu/bittrade/libs/steemj/SteemJ.java#L3018 ????
         List<ImmutablePair<PrivateKeyType, String>> privateKeys = new ArrayList<>();
         privateKeys.add(new ImmutablePair<>(PrivateKeyType.POSTING, postingKey));

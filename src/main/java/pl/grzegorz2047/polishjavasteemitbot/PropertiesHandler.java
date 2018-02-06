@@ -22,6 +22,7 @@ public class PropertiesHandler {
             prop.setProperty("howDeepToCheckIfFirstPost", "100");
             prop.setProperty("reblogEnabled", "true");
             prop.setProperty("debug", "true");
+            prop.setProperty("votingPowerLimit", "81");
 
             // save properties to project root folder
             prop.store(output, null);
