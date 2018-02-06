@@ -18,21 +18,21 @@ public class CommentingBot {
 
     private final int howDeepToCheckIfFirstPost;
     private final Long frequenceCheckInMilliseconds;
-    private final int votingPercentage;
     private final int votingPowerLimit;
+    private final List<Interval> intervalsList;
     private String lastAuthorName = "";
     private final boolean debugMode;
     private boolean votingEnabled;
     private boolean reblogEnabled;
 
-    public CommentingBot(boolean debugMode, int howDeepToCheckIfFirstPost, Long frequenceCheckInMilliseconds, boolean votingEnabled, int votingPercentage, boolean reblogEnabled, int votingPowerLimit) {
+    public CommentingBot(boolean debugMode, int howDeepToCheckIfFirstPost, Long frequenceCheckInMilliseconds, boolean votingEnabled, boolean reblogEnabled, int votingPowerLimit, List<Interval> intervalsList) {
         this.debugMode = debugMode;
         this.howDeepToCheckIfFirstPost = howDeepToCheckIfFirstPost;
         this.frequenceCheckInMilliseconds = frequenceCheckInMilliseconds;
         this.votingEnabled = votingEnabled;
-        this.votingPercentage = votingPercentage;
         this.reblogEnabled = reblogEnabled;
         this.votingPowerLimit = votingPowerLimit;
+        this.intervalsList = intervalsList;
     }
 
 
@@ -87,16 +87,17 @@ public class CommentingBot {
                         }
                         float votingPower = extendedAccount.getVotingPower() / 100;
                         message("Current voting power is " + votingPower + " for " + extendedAccount.getName(), false);
-                        if (votingPower > votingPowerLimit) {
-                            steemJ.vote(firstPostAuthor, permlinkToPost, (short) votingPercentage);
-                        } else {
+                        if (votingPower <= votingPowerLimit) {
                             message("Cannot vote! voting power is " + votingPower, true);
+                        } else {
+                            float usedIntervalVotingPower = getVotingPower(votingPower);
+                            steemJ.vote(firstPostAuthor, permlinkToPost, (short) usedIntervalVotingPower);
                         }
+
                     } catch (Exception ex) {
                         message("Error while voting data.", true);
                         message("author: " + accountWhichCommentsOnPost.getName() + "", true);
                         message("url: " + permlinkToPost.getLink() + "", true);
-                        message("votingPower: " + votingPercentage + "", true);
                     }
                     if (reblogEnabled) {
                         try {
@@ -126,6 +127,16 @@ public class CommentingBot {
 
         }
         Thread.sleep(frequenceCheckInMilliseconds);
+    }
+
+    private float getVotingPower(float votingPower) {
+        for (Interval interval : intervalsList) {
+            if (interval.isBetween(votingPower)) {
+                return interval.getVotingPower();
+            }
+        }
+
+        return 100;
     }
 
     private void message(String x, boolean isError) {

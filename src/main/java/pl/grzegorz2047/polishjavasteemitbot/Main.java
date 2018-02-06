@@ -64,10 +64,24 @@ public class Main {
         Long frequenceCheckInMilliseconds = Long.valueOf(data.getProperty("frequenceCheckInMilliseconds"));
         int howDeepToCheckIfFirstPost = Integer.valueOf(data.getProperty("howDeepToCheckIfFirstPost"));
         boolean reblogEnabled = Boolean.parseBoolean(data.getProperty("reblogEnabled"));
+        boolean intervalEnabled = Boolean.parseBoolean(data.getProperty("intervalsEnabled"));
         int votingPowerLimit = Integer.parseInt(data.getProperty("votingPowerLimit"));
+        String intervals = data.getProperty("intervals");
+
+        List<Interval> intervalsList = new ArrayList<>();
+        if (intervalEnabled) {
+            IntervalParse intervalParse = new IntervalParse();
+            intervalsList = intervalParse.parse(intervals);
+
+        }
+
+        if (intervalsList.isEmpty()) {
+            intervalsList.add(new Interval(0, 100, votingPower));
+        }
+
 
         SteemJConfig steemConfig = createSteemConfig(botName, postingKey);
-        CommentingBot commentingBot = new CommentingBot(debugMode, howDeepToCheckIfFirstPost, frequenceCheckInMilliseconds, votingEnabled, votingPower, reblogEnabled, votingPowerLimit);
+        CommentingBot commentingBot = new CommentingBot(debugMode, howDeepToCheckIfFirstPost, frequenceCheckInMilliseconds, votingEnabled, reblogEnabled, votingPowerLimit, intervalsList);
         String[] listOfCommentTags = commentTagsString.split(",");
         AccountName defaultAccount = steemConfig.getDefaultAccount();
         LOGGER.log(Level.INFO, "Bot is started!");

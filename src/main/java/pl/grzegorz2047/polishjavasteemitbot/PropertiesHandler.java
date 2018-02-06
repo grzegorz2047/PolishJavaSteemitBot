@@ -23,6 +23,8 @@ public class PropertiesHandler {
             prop.setProperty("reblogEnabled", "true");
             prop.setProperty("debug", "true");
             prop.setProperty("votingPowerLimit", "81");
+            prop.setProperty("intervalsEnabled", "true");
+            prop.setProperty("intervals", "0-80,10;81-90,50;91-100,100");
 
             // save properties to project root folder
             prop.store(output, null);
