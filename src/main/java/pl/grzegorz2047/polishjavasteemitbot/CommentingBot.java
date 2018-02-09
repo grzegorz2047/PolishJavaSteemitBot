@@ -3,7 +3,11 @@ package pl.grzegorz2047.polishjavasteemitbot;
 import eu.bittrade.libs.steemj.SteemJ;
 import eu.bittrade.libs.steemj.apis.database.models.state.Discussion;
 import eu.bittrade.libs.steemj.apis.follow.model.BlogEntry;
+import eu.bittrade.libs.steemj.apis.follow.models.operations.ReblogOperation;
 import eu.bittrade.libs.steemj.base.models.*;
+import eu.bittrade.libs.steemj.base.models.operations.CustomJsonOperation;
+import eu.bittrade.libs.steemj.base.models.operations.Operation;
+import eu.bittrade.libs.steemj.configuration.SteemJConfig;
 import eu.bittrade.libs.steemj.enums.DiscussionSortType;
 import eu.bittrade.libs.steemj.exceptions.SteemCommunicationException;
 import eu.bittrade.libs.steemj.exceptions.SteemInvalidTransactionException;
@@ -101,8 +105,7 @@ public class CommentingBot {
                     }
                     if (reblogEnabled) {
                         try {
-
-                            steemJ.reblog(firstPostAuthor, permlinkToPost);
+                            reblog(SteemJConfig.getInstance().getDefaultAccount(), firstPostAuthor, permlinkToPost);
                         } catch (Exception ex) {
                             message("Error while reblogging.", true);
                         }
@@ -132,6 +135,7 @@ public class CommentingBot {
     private float getVotingPower(float votingPower) {
         for (Interval interval : intervalsList) {
             if (interval.isBetween(votingPower)) {
+                message("Used inteval is " + interval.toString(), false);
                 return interval.getVotingPower();
             }
         }
@@ -144,6 +148,20 @@ public class CommentingBot {
             System.out.println(x);
             Main.sendMessage(x, isError);
         }
+    }
+
+    public void reblog(AccountName accountThatReblogsThePost, AccountName authorOfThePostToReblog, Permlink permlinkOfThePostToReblog) throws SteemCommunicationException, SteemResponseException, SteemInvalidTransactionException {
+        ArrayList<Operation> operations = new ArrayList();
+        ReblogOperation reblogOperation = new ReblogOperation(accountThatReblogsThePost, authorOfThePostToReblog, permlinkOfThePostToReblog);
+        ArrayList<AccountName> requiredPostingAuths = new ArrayList();
+        requiredPostingAuths.add(accountThatReblogsThePost);
+        CustomJsonOperation customJsonReblogOperation = new CustomJsonOperation((List) null, requiredPostingAuths, "follow", reblogOperation.toJson());
+        operations.add(customJsonReblogOperation);
+        SteemJ steemJ = new SteemJ();
+        DynamicGlobalProperty globalProperties = steemJ.getDynamicGlobalProperties();
+        SignedTransaction signedTransaction = new SignedTransaction(globalProperties.getHeadBlockId(), operations, (List) null);
+        signedTransaction.sign();
+        steemJ.broadcastTransaction(signedTransaction);
     }
 
     private List<Discussion> getPossibleNewPost(String tag, SteemJ steemJ, long frequenceCheckInMilliseconds) throws SteemCommunicationException, SteemResponseException, InterruptedException {

@@ -70,9 +70,12 @@ public class Main {
 
         List<Interval> intervalsList = new ArrayList<>();
         if (intervalEnabled) {
+            sendMessage("Wczytywanie przedzialow", false);
             IntervalParse intervalParse = new IntervalParse();
             intervalsList = intervalParse.parse(intervals);
-
+            for(Interval in : intervalsList) {
+                System.out.println("wczytany przedzial min= " + in.toString());
+            }
         }
 
         if (intervalsList.isEmpty()) {

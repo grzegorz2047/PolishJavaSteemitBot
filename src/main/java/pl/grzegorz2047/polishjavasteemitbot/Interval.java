@@ -20,4 +20,9 @@ public class Interval {
     public float getVotingPower() {
         return votingPower;
     }
+
+    @Override
+    public String toString() {
+        return "min=" + min + ", " + "max=" + max + ", " + "voting power=" + votingPower;
+    }
 }
