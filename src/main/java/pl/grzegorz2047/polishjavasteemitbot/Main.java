@@ -82,7 +82,6 @@ public class Main {
             intervalsList.add(new Interval(0, 100, votingPower));
         }
 
-
         SteemJConfig steemConfig = createSteemConfig(botName, postingKey);
         CommentingBot commentingBot = new CommentingBot(debugMode, howDeepToCheckIfFirstPost, frequenceCheckInMilliseconds, votingEnabled, reblogEnabled, votingPowerLimit, intervalsList);
         String[] listOfCommentTags = commentTagsString.split(",");

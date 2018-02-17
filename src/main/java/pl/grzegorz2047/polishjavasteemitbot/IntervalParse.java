@@ -27,6 +27,7 @@ public class IntervalParse {
                 }
                 intervals.add(new Interval(firstNumber, secondNumber, votingPower));
             } catch (NumberFormatException ex) {
+                System.out.println("Cannot parse interval  " + singleIntervalString);
                 continue;
             }
 

@@ -103,14 +103,13 @@ public class CommentingBot {
                         message("author: " + accountWhichCommentsOnPost.getName() + "", true);
                         message("url: " + permlinkToPost.getLink() + "", true);
                     }
-                    if (reblogEnabled) {
-                        try {
-                            reblog(SteemJConfig.getInstance().getDefaultAccount(), firstPostAuthor, permlinkToPost);
-                        } catch (Exception ex) {
-                            message("Error while reblogging.", true);
-                        }
+                }
+                if (reblogEnabled) {
+                    try {
+                        reblog(SteemJConfig.getInstance().getDefaultAccount(), firstPostAuthor, permlinkToPost);
+                    } catch (Exception ex) {
+                        message("Error while reblogging.", true);
                     }
-
                 }
                 lastAuthorName = firstPostAuthorName;
                 message("Successfuly commented!", false);
