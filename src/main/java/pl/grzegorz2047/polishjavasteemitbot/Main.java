@@ -1,5 +1,6 @@
 package pl.grzegorz2047.polishjavasteemitbot;
 
+import eu.bittrade.crypto.core.AddressFormatException;
 import eu.bittrade.libs.steemj.base.models.AccountName;
 import eu.bittrade.libs.steemj.configuration.SteemJConfig;
 import eu.bittrade.libs.steemj.enums.PrivateKeyType;
@@ -7,7 +8,6 @@ import eu.bittrade.libs.steemj.exceptions.SteemCommunicationException;
 import eu.bittrade.libs.steemj.exceptions.SteemInvalidTransactionException;
 import eu.bittrade.libs.steemj.exceptions.SteemResponseException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.bitcoinj.core.AddressFormatException;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
@@ -15,7 +15,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.*;
@@ -37,6 +36,8 @@ public class Main {
                 properties.createFileProperties();
                 System.exit(0);
             }
+
+
             setupFileLogging();
             runCommentingBot(properties);
         } catch (SteemResponseException e) {
@@ -73,7 +74,7 @@ public class Main {
             sendMessage("Wczytywanie przedzialow", false);
             IntervalParse intervalParse = new IntervalParse();
             intervalsList = intervalParse.parse(intervals);
-            for(Interval in : intervalsList) {
+            for (Interval in : intervalsList) {
                 System.out.println("wczytany przedzial min= " + in.toString());
             }
         }

@@ -42,3 +42,7 @@ To kill bot, simply use ctrl + c
 My steemit account is
 
 https://steemit.com/@grzegorz2047
+
+To compile project you need to install dependency mvn org.apache.maven.plugins:maven-install-plugin:2.3.1:install-file -Dfile=libs/steemj-core-0.5.0-SNAPSHOT.jar -DgroupId=eu.bittrade.libs -DartifactId=steemj-core -Dversion=0.5.0 -Dpackaging=jar -DlocalRepositoryPath=repo
+
+and compile with  mvn install command
