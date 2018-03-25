@@ -1,7 +1,6 @@
 bot.properties
 target/
 *.class
-*.jar
 *.war
 *.ear
 *.logs
