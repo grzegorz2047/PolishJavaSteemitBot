@@ -14,15 +14,24 @@
             <id>repo</id>
             <url>file://${project.basedir}/repo</url>
         </repository>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
     </repositories>
 
     <dependencies>
         <dependency>
+            <groupId>com.github.muksihs.steem-java-api-wrapper</groupId>
+            <artifactId>steemj-core</artifactId>
+            <version>bc1d2a1</version>
+        </dependency>
+<!--        <dependency>
             <groupId>eu.bittrade.libs</groupId>
             <artifactId>steemj-core</artifactId>
             <version>0.5.0</version>
             <scope>compile</scope>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>

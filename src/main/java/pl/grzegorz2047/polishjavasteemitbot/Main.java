@@ -46,7 +46,7 @@ public class Main {
         } catch (SteemCommunicationException e) {
             sendMessage("A communication error occured!", e, true);
         } catch (InterruptedException | IOException | SteemInvalidTransactionException e) {
-            e.printStackTrace();
+            sendMessage("An unknown error occured!", e, true);
         } catch (AddressFormatException e) {
             sendMessage("Klucz prywatny jest nieprawidlowy!", true);
         }

@@ -1,15 +1,15 @@
 package pl.grzegorz2047.polishjavasteemitbot;
 
-import eu.bittrade.libs.steemj.exceptions.SteemCommunicationException;
-import eu.bittrade.libs.steemj.exceptions.SteemResponseException;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.Collections;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CommentingBotTest {
     @Test
-    void checkIfFirstInSpecifiedTag() throws SteemResponseException, SteemCommunicationException {
-        CommentingBot commentingBot = new CommentingBot(true, 100, (long) 1000);
+    void checkIfFirstInSpecifiedTag() throws Exception {
+        CommentingBot commentingBot = new CommentingBot(true, 100, (long) 1000, false, false, 90, Collections.singletonList(new Interval(30, 90, 100)));
         boolean answer = commentingBot.checkIfFirstInSpecifiedTag("polish", "grzegorz2047");
         assertTrue(!answer);
     }
